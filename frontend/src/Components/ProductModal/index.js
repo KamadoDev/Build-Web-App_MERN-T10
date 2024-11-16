@@ -10,7 +10,7 @@ import ProductZoom from "../ProductZoom";
 
 const ProductModal = (props) => {
   const context = useContext(MyContext);
-  
+
   return (
     <>
       <Dialog
@@ -25,42 +25,44 @@ const ProductModal = (props) => {
           <IoMdClose />
         </Button>
         <h4 className="mb-1 font-weight-bold pr-5">
-          Apple iPhone 15 256GB Black
+          {props.data?.product?.name}
         </h4>
-        <div className="d-flex align-items-center">
+        <div className="d-flex mt-2 align-items-center">
           <div className="d-flex align-items-center">
-            <span>Brands:</span>
-            <span className="ml-2">Apple</span>
+            <span>Thương hiệu:</span>
+            <span className="ml-2 badge badge-danger p-2">
+              {props.data?.product?.brand}
+            </span>
           </div>
           <Rating
             name="read-only"
-            value={4.5}
+            value={Number(props.data?.product?.rating)}
             size="small"
             precision={0.5}
             readOnly
+            className="ml-3"
           />
         </div>
-
         <hr />
 
         <div className="row mt-2 productDetailModal">
           <div className="col-md-5">
-            <ProductZoom/>
+            <ProductZoom images={props.data?.product?.images} discount={props.data?.product?.discount}/>
           </div>
           <div className="col-md-7">
             <div className="d-flex info  align-items-center mb-3">
-              <span className="oldPrice lg">$9.50</span>
-              <span className="newPrice lg text-danger ml-2">$9.50</span>
+              <span className="oldPrice lg">
+                {props.data?.product?.old_price}
+              </span>
+              <span className="newPrice lg text-danger ml-2">{props.data?.product?.price}</span>
             </div>
+
             <span className="badge badge-span bg-success text-white">
-              In Stock
+              {props.data?.product?.productInStock > 0
+                ? "In Stock"
+                : "Out of Stock"}
             </span>
-            <p className="mt-3">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-              cursus, orci sed condimentum facilisis, justo neque cursus velit,
-              in elementum mauris nunc vitae neque. Quisque non condimentum
-              arcu. Nulla facilisi.
-            </p>
+            <p className="mt-3">{props.data?.product?.description}</p>
             <div className="d-flex align-items-center">
               <QuantityBox />
               <Button className="btn-blue text-white bg-red btn-lg btn-big btn-round ml-3 ">

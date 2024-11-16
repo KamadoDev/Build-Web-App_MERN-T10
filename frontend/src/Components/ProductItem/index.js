@@ -1,25 +1,26 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 
 import Button from "@mui/material/Button";
 import { TfiFullscreen } from "react-icons/tfi";
 import { IoMdHeartEmpty } from "react-icons/io";
-
+import { Link } from "react-router-dom";
 // import required modules
 import { Rating } from "@mui/material";
-import ProductModal from "../ProductModal";
 import { MyContext } from "../../App";
+import { useEffect } from "react";
 
 const ProductItem = (props) => {
-  const [value, setValue] = React.useState(4.5);
-
   const context = useContext(MyContext);
   const viewProductDetails = (id) => {
-    context.setisOpenProductModal(true);
+    context.setisOpenProductModal({
+      id: id,
+      open: true,
+    });
   };
 
-  const closeProductModal = () => {
-    context.setisOpenProductModal(false);
-  };
+  useEffect(() => {
+    console.log(props.item);
+  }, [props.item]);
 
   return (
     <>
@@ -27,12 +28,20 @@ const ProductItem = (props) => {
         <div className="imgWrapper">
           <img
             className="w-100"
-            src="https://res.cloudinary.com/da26rdzwp/image/upload/v1726295320/1726295319581_nivea-24-hour-melt-in-moisture-caring-lip-balm-cherry-shine-4-8-g-product-images-o490180140-p490180140-0-202203170330_1.webp"
-            alt=""
+            src={props.item?.images[0].url}
+            alt={props.item?.name?.substr(0, 19) + "..."}
+            style={{ height: "250px" }}
           />
-          <span className="badge">28% off</span>
+
+          {
+            props.item?.discount > 0 && (
+              <span className="badge badge-danger">
+                {props.item?.discount}% Off
+              </span>
+            )
+          }
           <div className="actions">
-            <Button onClick={() => viewProductDetails(1)}>
+            <Button onClick={() => viewProductDetails(props.item?.id)}>
               <TfiFullscreen />
             </Button>
             <Button>
@@ -42,20 +51,26 @@ const ProductItem = (props) => {
         </div>
 
         <div className="info">
-          <h4 className="">pink solid casual shirt...</h4>
-          <span className="text-success d-block">In stock</span>
+          <Link to={`/product/${props.item?._id}`}>
+            <h4>{props.item?.name?.substr(0, 19) + "..."}</h4>
+          </Link>
+          <span className="text-success d-block">
+            {props.item?.productInStock > 0 ? "In Stock" : "Out of Stock"}
+          </span>
           <Rating
             className="mt-2 mb-2"
             name="read-only"
-            value={value}
+            value={props.item?.rating}
             readOnly
             size="small"
             precision={0.5}
           />
 
           <div className="d-flex">
-            <span className="oldPrice">$20.00</span>
-            <span className="newPrice text-danger ml-2">$14.00</span>
+            <span className="oldPrice">{props.item?.old_price}</span>
+            <span className="newPrice text-danger ml-2">
+              {props.item?.price}
+            </span>
           </div>
         </div>
       </div>

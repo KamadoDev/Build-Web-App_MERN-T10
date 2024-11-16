@@ -11,13 +11,44 @@ import { IoMailOutline } from "react-icons/io5";
 import banner3 from "../../assets/images/banner3.jpg";
 import banner4 from "../../assets/images/banner4.jpg";
 import coupons from "../../assets/images/coupons.png";
+import { useEffect } from "react";
+import { getData } from "../../utils/api";
+import { useState } from "react";
 
 const Home = () => {
+  const [dataCat, setDataCat] = useState([]);
+  const [dataFeatured, setDataFeatured] = useState([]);
+  const [dataNewProduct, setDataNewProduct] = useState([]);
+  // const [dataProducts, setDataProducts] = useState([]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    getData("/api/category").then((res) => {
+      console.log(res);
+      setDataCat(res.categories);
+    });
+    getData(`/api/products/featured`).then((res) => {
+      console.log(res);
+      setDataFeatured(res.products);
+    });
+    getData(`/api/products/new`).then((res) => {
+      console.log(res);
+      setDataNewProduct(res.products);
+    });
+    // getData(`/api/products`).then((res) => {
+    //   console.log(res);
+    //   setDataProducts(res.products);
+    // });
+  }, []);
+
   return (
     <>
       <HomeBanner />
-
-      <HomeCatSilde />
+      {dataCat?.length !== 0 ? (
+        <HomeCatSilde dataCat={dataCat} />
+      ) : (
+        <div>Không có dữ liệu!</div>
+      )}
       <section className="homeProducts">
         <div className="container">
           <div className="row">
@@ -43,9 +74,9 @@ const Home = () => {
               {/* BESTSELLERS */}
               <div className="d-flex align-items-center">
                 <div className="info">
-                  <h3 className="mb-0 hd">BEST SELLERS</h3>
-                  <p className="text-title mb-0">
-                    Do not miss the current offers until the end of March.
+                  <h3 className="mb-0 hd">Sản phẩm nổi bật</h3>
+                  <p className="text-title mb-0 mt-1 text-danger">
+                    Đừng bỏ lỡ các ưu đãi hiện tại bạn nhé...!
                   </p>
                 </div>
 
@@ -55,7 +86,11 @@ const Home = () => {
               </div>
 
               <div className="product_row w-100 mt-4">
-                <ProductItemSlide />
+                {dataFeatured?.length !== 0 ? (
+                  <ProductItemSlide dataFeatured={dataFeatured} />
+                ) : (
+                  <div>Không có dữ liệu!</div>
+                )}
               </div>
               {/* BESTSELLERS END*/}
 
@@ -74,18 +109,12 @@ const Home = () => {
               </div>
 
               <div className="product_row productWrap w-100 mt-4">
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
-                <ProductItem />
+                {dataNewProduct?.length !== 0 &&
+                  dataNewProduct?.map((item, index) => (
+                    <ProductItem key={index} item={item} />
+                  ))}
+
+                {dataNewProduct?.length === 0 && <div>Không có dữ liệu!</div>}
               </div>
               {/* NEW PRODUCTS END */}
 
@@ -104,7 +133,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       <section className="newLetterSection mb-3 mt-3 d-flex align-items-center">
         <div className="container">
           <div className="row">

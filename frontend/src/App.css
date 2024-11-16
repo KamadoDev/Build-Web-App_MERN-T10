@@ -342,7 +342,6 @@ nav .navPart1 .catWrapper .sidebarNav ul li .submenu {
   top: 0% !important;
   left: 105%;
   width: 250px;
-  height: 100%;
   background-color: #fff;
   z-index: 100;
   opacity: 0;
@@ -834,12 +833,10 @@ nav .navPart2 ul li .submenu a button {
   width: 100%;
   height: auto;
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
 .homeCatSilde .swiper .item:hover {
-  transform: scale(0.9);
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
@@ -1089,6 +1086,7 @@ footer .copyright ul li a:hover {
 footer .copyright ul li a svg {
   font-size: 18px;
 }
+
 /* FOOTER END */
 
 /* ProductModal */
@@ -1122,10 +1120,11 @@ footer .copyright ul li a svg {
   overflow: hidden;
 }
 .productZoomBig {
-  height: 350px;
+  width: 100%; /* Hoặc chiều rộng mong muốn */
+  height: 400px; /* Đặt chiều cao tùy ý phù hợp với thiết kế */
   overflow: hidden;
-  border-radius: 7px;
 }
+
 .zoomSliderBig {
   width: 100% !important;
 }
@@ -1148,6 +1147,7 @@ footer .copyright ul li a svg {
 
 .zoomSlider .item.item_active {
   opacity: 1;
+  border: 2px solid #007bff;
 }
 .zoomSlider .slick-current .item {
   border: 2px solid #007aff !important;
@@ -1804,6 +1804,5 @@ footer .copyright ul li a svg {
   font-size: 35px;
   margin-right: 10px;
 }
-
 
 /* signinPage END*/

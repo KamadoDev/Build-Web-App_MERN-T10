@@ -12,21 +12,46 @@ import ProductDetails from "./Pages/ProductDetails";
 import Cart from "./Pages/Cart";
 import AuthSignIn from "./Pages/AuthSignIn";
 import AuthSignUp from "./Pages/AuthSignUp";
+import { getData } from "./utils/api";
 
 const MyContext = createContext();
 function App() {
   const [countryList, setCountryList] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [isOpenProductModal, setisOpenProductModal] = useState(false);
+  const [isOpenProductModal, setisOpenProductModal] = useState({
+    id: "",
+    open: false,
+  });
   const [isHeaderFooterShow, setisHeaderFooterShow] = useState(true);
   const [isLogin, setIsLogin] = useState(false);
+  const [productData, setProductData] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const [subCategoryData, setSubCategoryData] = useState([]);
 
   useEffect(() => {
     getCountry("https://countriesnow.space/api/v0.1/countries");
+
+    getData("/api/category").then((data) => {
+      console.log(data);
+      setCategoryData(data.categories);
+    });
+
+    getData("/api/subcategory").then((data) => {
+      console.log(data);
+      setSubCategoryData(data.subcategories);
+    });
   }, []);
 
+  useEffect(() => {
+    isOpenProductModal.open === true &&
+      getData(`/api/products/${isOpenProductModal.id}`).then((data) => {
+        console.log(data);
+        setProductData(data);
+      });
+  }, [isOpenProductModal]);
+
   const getCountry = async (url) => {
-    const responsive = await axios.get(url).then((res) => {
+    await axios.get(url).then((res) => {
       setCountryList(res.data.data);
     });
   };
@@ -41,6 +66,10 @@ function App() {
     setisHeaderFooterShow,
     isLogin,
     setIsLogin,
+    categoryData,
+    setCategoryData,
+    subCategoryData,
+    setSubCategoryData,
   };
   return (
     <BrowserRouter>
@@ -59,7 +88,9 @@ function App() {
           <Route path="/signUp" exact={true} element={<AuthSignUp />} />
         </Routes>
         {isHeaderFooterShow === true && <Footer />}
-        {isOpenProductModal === true && <ProductModal />}
+        {isOpenProductModal.open === true && (
+          <ProductModal data={productData} />
+        )}
       </MyContext.Provider>
     </BrowserRouter>
   );

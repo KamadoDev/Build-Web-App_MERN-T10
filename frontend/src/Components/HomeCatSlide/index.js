@@ -7,8 +7,15 @@ import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { useEffect } from "react";
 
-const HomeCatSilde = () => {
+const HomeCatSilde = (props) => {
+  const [dataCat, setDataCat] = useState([]);
+
+  useEffect(() => {
+    setDataCat(props.dataCat);
+  }, [props.dataCat]);
+
   const [itemBackground, setItemBackground] = useState([
     "#fffceb",
     "#ecffec",
@@ -28,25 +35,29 @@ const HomeCatSilde = () => {
     <>
       <section className="homeCatSilde">
         <div className="container">
-            <h3 className="mb-3 hd">Featured Categories</h3>
+          <h3 className="mb-3 hd">Danh mục nổi bật</h3>
           <Swiper
-            slidesPerView={10}
+            slidesPerView={8}
             spaceBetween={10}
             navigation={true}
-            slidesPerGroup={5}
             // autoplay={{ delay: 2500, disableOnInteraction: false }}
             modules={[Autoplay, Navigation]}
             className="mySwiper"
+            style={{padding: '10px'}}
           >
-            {itemBackground?.map((item, index) => {
+            {dataCat?.map((item, index) => {
               return (
-                <SwiperSlide key={index}>
-                  <div className="item text-center" style={{background: item}}>
+                <SwiperSlide key={index} className="shadow-sm">
+                  <div
+                    className="item text-center"
+                    style={{ background: item.color }}
+                  >
                     <img
-                      src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725960852/1725960851153_fash.png"
-                      alt=""
+                      src={item.images[0].url}
+                      alt={item.name}
+                      style={{ height: "100px", borderRadius: "5px" }}
                     />
-                    <h6>Fashion</h6>
+                    <h6>{item.name}</h6>
                   </div>
                 </SwiperSlide>
               );

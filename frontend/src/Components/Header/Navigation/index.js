@@ -2,11 +2,14 @@ import Button from "@mui/material/Button";
 import { IoIosMenu } from "react-icons/io";
 import { FaAngleDown } from "react-icons/fa6";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FaAngleRight } from "react-icons/fa6";
+import { MyContext } from "../../../App";
 
 const Navigation = () => {
   const [isOpenSibarVal, setIsOpenSidebarNav] = useState(false);
+  const context = useContext(MyContext);
+
   return (
     <>
       <nav>
@@ -22,7 +25,7 @@ const Navigation = () => {
                   <span className="icon1 mr-2">
                     <IoIosMenu />
                   </span>
-                  <span class="text">ALL CATEGORIES</span>
+                  <span className="text">ALL CATEGORIES</span>
                   <span className="icon2 ml-2">
                     <FaAngleDown />
                   </span>
@@ -34,111 +37,47 @@ const Navigation = () => {
                   }`}
                 >
                   <ul>
-                    <li>
-                      <Link to="/">
-                        <Button>Women <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                      <div className="submenu">
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                      </div>
-                    </li>
-                    <li>
-                      <Link to="/">
-                        <Button>Men <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                      <div className="submenu">
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                      </div>
-                    </li>
-                    <li>
-                      <Link to="/">
-                        <Button>Kids <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                      <div className="submenu">
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                      </div>
-                    </li>
-                    <li>
-                      <Link to="/">
-                        <Button>Women <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                      <div className="submenu">
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                        <Link to="/">
-                          <Button>Kids</Button>
-                        </Link>
-                      </div>
-                    </li>
-                    <li>
-                      <Link to="/">
-                        <Button>Men <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/">
-                        <Button>Kids <FaAngleRight className="ml-auto"/></Button>
-                      </Link>
-                    </li>
+                    {context.categoryData
+                      ?.filter((category) => category.type === "nav")
+                      .map((category) => {
+                        const matchedSubCategories =
+                          context.subCategoryData?.filter(
+                            (subCategory) =>
+                              subCategory.parentCategory.id === category.id
+                          );
+                        return (
+                          <li key={category.id}>
+                            <Link to={category.link || "/"}>
+                              <Button>
+                                {category.name}{" "}
+                                {matchedSubCategories.length > 0 && (
+                                  <FaAngleRight className="ml-auto" />
+                                )}
+                              </Button>
+                            </Link>
+                            {/* Hiển thị danh mục con nếu có */}
+                            {matchedSubCategories?.length > 0 && (
+                              <div className="submenu">
+                                {matchedSubCategories.map((subCategory) => (
+                                  <Link
+                                    to={subCategory.link || "/"}
+                                    key={subCategory.id}
+                                  >
+                                    <Button>{subCategory.name}</Button>
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
                   </ul>
                 </div>
               </div>
             </div>
             {/* Navigation ALL CATEGORY */}
 
-            {/* Navigation HEADER */}
+            {/* Navigation HEADER ON MENU*/}
             <div className="col-sm-10 navPart2 d-flex align-items-center">
               <ul className="list list-inline ml-auto">
                 <li className="list-inline-item">
@@ -146,65 +85,37 @@ const Navigation = () => {
                     <Button>Home</Button>
                   </Link>
                 </li>
-                <li className="list-inline-item">
-                  <Link to="/">
-                    <Button>Fashion</Button>
-                  </Link>
-                  {/* SUB CATEGORY */}
-                  <div className="submenu shadow">
-                    <Link to="/">
-                      <Button>Fashion Sub 1</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 2</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 3</Button>
-                    </Link>
-                  </div>
-                  {/* SUB CATEGORY END */}
-                </li>
-                <li className="list-inline-item">
-                  <Link to="/">
-                    <Button>Electronic</Button>
-                  </Link>
-                  {/* SUB CATEGORY */}
-                  <div className="submenu shadow">
-                    <Link to="/">
-                      <Button>Fashion Sub 1</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 2</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 3</Button>
-                    </Link>
-                  </div>
-                  {/* SUB CATEGORY END */}
-                </li>
-                <li className="list-inline-item">
-                  <Link to="/">
-                    <Button>Bakery</Button>
-                  </Link>
-                  {/* SUB CATEGORY */}
-                  <div className="submenu shadow">
-                    <Link to="/">
-                      <Button>Fashion Sub 1</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 2</Button>
-                    </Link>
-                    <Link to="/">
-                      <Button>Fashion Sub 3</Button>
-                    </Link>
-                  </div>
-                  {/* SUB CATEGORY END */}
-                </li>
-                <li className="list-inline-item">
-                  <Link to="/">
-                    <Button>Grocery</Button>
-                  </Link>
-                </li>
+                {context.categoryData
+                  ?.filter((category) => category.type === "menu")
+                  .map((category) => {
+                    // Tìm các subcategory khớp với category
+                    const matchedSubCategories =
+                      context.subCategoryData?.filter(
+                        (subCategory) =>
+                          subCategory.parentCategory.id === category.id
+                      );
+
+                    return (
+                      <li className="list-inline-item" key={category.id}>
+                        <Link to={category.link || "/"}>
+                          <Button>{category.name}</Button>
+                        </Link>
+                        {/* Kiểm tra và hiển thị subcategory */}
+                        {matchedSubCategories?.length > 0 ? (
+                          <div className="submenu shadow">
+                            {matchedSubCategories.map((subCategory) => (
+                              <Link
+                                to={subCategory.link || "/"}
+                                key={subCategory.id}
+                              >
+                                <Button>{subCategory.name}</Button>
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 <li className="list-inline-item">
                   <Link to="/">
                     <Button>Blog</Button>

@@ -9,7 +9,13 @@ import "swiper/css/navigation";
 // import required modules
 import { Autoplay, Navigation } from "swiper/modules";
 import ProductItem from "../ProductItem";
-const ProductItemSlide = () => {
+import { useState } from "react";
+import { useEffect } from "react";
+const ProductItemSlide = (props) => {
+  const [dataFeatured, setDataFeatured] = useState([]);
+  useEffect(() => {
+    setDataFeatured(props.dataFeatured);
+  }, [props.dataFeatured]);
 
   return (
     <>
@@ -21,21 +27,13 @@ const ProductItemSlide = () => {
         modules={[Autoplay, Navigation]}
         className="mySwiper"
       >
-        <SwiperSlide>
-          <ProductItem />
-        </SwiperSlide>
-        <SwiperSlide>
-          <ProductItem />
-        </SwiperSlide>
-        <SwiperSlide>
-          <ProductItem />
-        </SwiperSlide>
-        <SwiperSlide>
-          <ProductItem />
-        </SwiperSlide>
-        <SwiperSlide>
-          <ProductItem />
-        </SwiperSlide>
+        {dataFeatured?.map((item, index) => {
+          return (
+            <SwiperSlide key={index}>
+              <ProductItem item={item} />
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </>
   );

@@ -1,145 +1,71 @@
-import Slider from "react-slick";
-import InnerImageZoom from "react-inner-image-zoom";
-import "react-inner-image-zoom/lib/InnerImageZoom/styles.css";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Navigation, EffectFade } from "swiper/modules";
 import { useRef, useState } from "react";
 
-
-const ProductZoom = () => {
-    const zoomSliderRefBig = useRef();
-  const zoomSliderRef = useRef();
-  const [slideIndex, setSlideIndex] = useState([0]);
-
-
-  const settings2 = {
-    dots: false,
-    infinite: false,
-    speed: 500, // Tốc độ chuyển đổi slide
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: true,
-    fade: false, // Đảm bảo rằng fade không được bật nếu không muốn hiệu ứng mờ
-  };
-
-  const settings = {
-    dots: false,
-    infinite: false,
-    speed: 500, // Điều chỉnh tốc độ nếu cần thiết
-    slidesToShow: 5,
-    slidesToScroll: 1,
-    arrows: true,
-    fade: false, // Tắt fade
-  };
+const ProductZoom = (props) => {
+  const zoomSliderRefBig = useRef(null);
+  const zoomSliderRef = useRef(null);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   const goto = (index) => {
     setSlideIndex(index);
-    zoomSliderRef.current.slickGoTo(index);
-    zoomSliderRefBig.current.slickGoTo(index);
+    zoomSliderRef.current.slideTo(index);
+    zoomSliderRefBig.current.slideTo(index);
   };
-    return (
-        <>
-        <div className="productZoom position-relative mb-3 productZoomBig">
-              <div className="badge badge-primary">23%</div>
-              <Slider
-                {...settings2}
-                className="zoomSliderBig"
-                ref={zoomSliderRefBig}
-              >
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961127/1725961124195_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-1-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961127/1725961124195_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-1-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-                <div className="item">
-                  <img
-                    className="img-fluid"
-                    src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                    alt=""
-                  />
-                </div>
-              </Slider>
+
+  return (
+    <>
+      <div className="productZoom position-relative mb-3 productZoomBig">
+        <div className="badge badge-primary">{props.discount}%</div>
+        <Swiper
+          onSwiper={(swiper) => (zoomSliderRefBig.current = swiper)}
+          slidesPerView={1}
+          spaceBetween={0}
+          navigation={false}
+          slidesPerGroup={1}
+          modules={[Navigation, EffectFade]}
+          effect="fade"
+          className="zoomSliderBig"
+        >
+          {props?.images?.map((item, index) => (
+            <SwiperSlide key={index}>
+              <div className="item">
+                <img className="img-fluid" src={item.url} alt={item.name}/>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+
+      <Swiper
+        onSwiper={(swiper) => (zoomSliderRef.current = swiper)}
+        slidesPerView={5}
+        spaceBetween={5}
+        navigation={false}
+        slidesPerGroup={1}
+        modules={[Navigation]}
+        className="zoomSlider"
+      >
+        {props?.images?.map((item, index) => (
+          <SwiperSlide key={index}>
+            <div
+              className={`item ${slideIndex === index ? "item_active" : ""}`}
+            >
+              <img
+                className="img-fluid"
+                src={item.url}
+                alt={item.name}
+                onClick={() => goto(index)}
+                style={{height: '100px'}}
+              />
             </div>
-            <Slider {...settings} className="zoomSlider" ref={zoomSliderRef}>
-              <div className={`item ${slideIndex === 0 && "item_active"}`}>
-                <img
-                  onClick={() => goto(0)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961127/1725961124195_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-1-202308161432.webp"
-                  alt=""
-                />
-              </div>
-              <div className={`item ${slideIndex === 1 && "item_active"}`}>
-                <img
-                  onClick={() => goto(1)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                  alt=""
-                />
-              </div>
-              <div className={`item ${slideIndex === 2 && "item_active"}`}>
-                <img
-                  onClick={() => goto(2)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                  alt=""
-                />
-              </div>
-              <div className={`item ${slideIndex === 3 && "item_active"}`}>
-                <img
-                  onClick={() => goto(3)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961127/1725961124195_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-1-202308161432.webp"
-                  alt=""
-                />
-              </div>
-              <div className={`item ${slideIndex === 4 && "item_active"}`}>
-                <img
-                  onClick={() => goto(4)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                  alt=""
-                />
-              </div>
-              <div className={`item ${slideIndex === 5 && "item_active"}`}>
-                <img
-                  onClick={() => goto(5)}
-                  className="img-fluid"
-                  src="https://res.cloudinary.com/da26rdzwp/image/upload/v1725961126/1725961124187_siril-georgette-pink-color-saree-with-blouse-piece-product-images-rvrk9p11sk-0-202308161432.webp"
-                  alt=""
-                />
-              </div>
-            </Slider>
-        </>
-    )
-}
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </>
+  );
+};
 
 export default ProductZoom;
