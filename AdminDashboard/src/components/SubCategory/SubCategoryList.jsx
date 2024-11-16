@@ -1,6 +1,5 @@
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { FaRegEdit } from "react-icons/fa";
 // import { FiEye } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import PropTypes from "prop-types";
@@ -9,43 +8,27 @@ import { PiExport } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import { IoMdAdd } from "react-icons/io";
 import SearchBox from "../SearchBox";
-import { FaEye } from "react-icons/fa";
 import Pagination from "@mui/material/Pagination";
 import { useContext, useEffect, useState } from "react";
 import { deleteData, getData } from "../../utils/api";
 import { MyContext } from "../../App";
-import Drawer from "@mui/material/Drawer";
 import LinearProgress from "@mui/material/LinearProgress";
-import ProductEdit from "./ProductEdit";
-import Rating from "@mui/material/Rating";
-import Stack from "@mui/material/Stack";
 
-const ProductsList = (props) => {
+const SubCategoryList = (props) => {
   const { title, isSharedPage } = props;
-  const [dataProducts, setDataProducts] = useState([]);
+  const [dataCat, setDataCat] = useState([]);
   const context = useContext(MyContext);
-  const [id, setId] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0); // Tổng số trang
-  // Hàm Edit sản phẩm
-  const handleEditProduct = (id) => {
-    // Tùy chỉnh code để chỉnh sản phẩm mục tại đây
-    if (id) {
-      console.log("Edit Product:", id);
-      context.setOpenDraw(true);
-      setId(id);
-    }
-  };
 
-  // Hàm Xóa sản phẩm
-  const handleDeleteProduct = async (id) => {
-    window.scrollTo(0, 0);
+  // Hàm Xóa danh mục
+  const handleDeleteCategory = async (id) => {
     setLoading(true);
+    window.scrollTo(0, 0);
     try {
-      const response = await deleteData("/api/products/", id);
-      console.log(response);
+      const response = await deleteData("/api/subcategory/", id);
       if (response.success === true) {
         context.setMessage(response.message);
         context.setTypeMessage(response.type || "success");
@@ -59,6 +42,7 @@ const ProductsList = (props) => {
       console.error("Error:", error);
       context.setOpen(true);
     } finally {
+      fetchData();
       setLoading(false);
     }
   };
@@ -66,13 +50,13 @@ const ProductsList = (props) => {
   // Hàm lấy dữ liệu từ API
   const fetchData = async (currentPage = 1) => {
     try {
-      const res = await getData(`/api/products?page=${currentPage}`);
+      const res = await getData(`/api/subcategory?page=${currentPage}`);
       if (res) {
-        setDataProducts(res.products);
+        setDataCat(res.subcategories);
         setTotalPages(res.totalPages);
         console.log(res);
       } else {
-        setDataProducts([]);
+        setDataCat([]);
         setTotalPages(null);
       }
     } catch (error) {
@@ -89,33 +73,24 @@ const ProductsList = (props) => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (context.openDraw === false) {
-      fetchData(page);
-    }
-  }, [context.openDraw, page, context]);
+    fetchData(page);
+  }, [page]);
 
   return (
     <>
-      <Drawer
-        open={context.openDraw}
-        anchor="right"
-        onClose={() => context.setOpenDraw(false)}
-      >
-        <ProductEdit productID={String(id)} />
-      </Drawer>
       {!isSharedPage && (
         <div className="card shadow my-4 border-0 flex-center p-3">
           <div className="flex items-center justify-between">
-            <h1 className="font-weight-bold mb-0">Products</h1>
+            <h1 className="font-weight-bold mb-0">Sub Category</h1>
             <div className="ml-auto flex items-center gap-3">
-              <Button className="btn-sm btn-border capitalize">
+              <Button className="btn-sm btn-border">
                 <PiExport />
                 Export to Excel
               </Button>
-              <Link to="/products/create">
-                <Button className="btn-sm btn-border btn-blue capitalize">
+              <Link to="/subcategory/create">
+                <Button className="btn-sm btn-border btn-blue">
                   <IoMdAdd />
-                  Add Product
+                  Add sub category
                 </Button>
               </Link>
             </div>
@@ -136,102 +111,45 @@ const ProductsList = (props) => {
           <thead className="table-dark">
             <tr className="capitalize">
               <th scope="col">#</th>
-              <th scope="col">product name</th>
-              <th scope="col">Image</th>
-              <th scope="col">category</th>
-              <th scope="col">sub category</th>
-              <th scope="col">brand</th>
-              <th scope="col" className="text-center">Rating</th>
-              <th scope="col">price</th>
+              <th scope="col">_ID Cat</th>
+              <th scope="col">Category Image</th>
+              <th scope="col">Category Name</th>
+              <th scope="col">_ID Sub Cat</th>
+              <th scope="col">Sub Category Name</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(dataProducts) && dataProducts.length > 0 ? (
-              dataProducts.map((item, index) => (
+            {Array.isArray(dataCat) && dataCat.length > 0 ? (
+              dataCat.map((item, index) => (
                 <tr key={index}>
-                  <th className="align-middle" scope="row">
+                  <th className="align-middle w-[5%]" scope="row">
                     {index + 1}
                   </th>
-                  <td className="align-middle">
-                    <div className="info">
-                      <Link to={`/products/detail/${item._id}`}>
-                        <h6>{item.name}</h6>
-                      </Link>
-                    </div>
-                  </td>
+                  <td className="align-middle">{item.parentCategory.id}</td>
                   <td className="align-middle">
                     <div className="productCell">
                       <div className="imgWrapper">
                         <img
-                          src={item.images?.[0]?.url || ""}
+                          src={item.parentCategory.images?.[0]?.url || ""}
                           alt="Category Image"
                           className="rounded-sm card"
                         />
                       </div>
                     </div>
                   </td>
-                  <td className="align-middle">
-                    {item.category?.name || "N/A"}
-                  </td>
-                  <td className="align-middle">
-                    {item.sub_category?.name || "N/A"}
-                  </td>
-                  <td className="align-middle w-[10%] text-center">
-                    <span className="badge badge-secondary">{item.brand}</span>
-                  </td>
-                  <td className="align-middle w-[5%]">
-                    <Stack spacing={1}>
-                      <Rating
-                        name="simple-controlled"
-                        value={item.rating}
-                        readOnly={true}
-                        size="small"
-                        // precision={0.5}
-                      />
-                    </Stack>
-                  </td>
-                  <td className="align-middle w-[15%]">
-                    <div>
-                      <del className="old">{item.old_price}</del>
-                      <span className="new text-danger  d-block w-100">
-                        {item.price}
-                      </span>
-                    </div>
-                  </td>
+                  <td className="align-middle">{item.parentCategory.name}</td>
+                  <td className="align-middle">{item._id}</td>
+                  <td className="align-middle">{item.name}</td>
                   <td className="align-middle">
                     <div className="flex gap-3">
-                      <div
-                        className="btnActions"
-                        style={{ backgroundColor: "#6dc4c4" }}
-                      >
-                        <Tooltip title="View">
-                          <Link to="/products/view">
-                            <IconButton>
-                              <FaEye />
-                            </IconButton>
-                          </Link>
-                        </Tooltip>
-                      </div>
-                      <div
-                        className="btnActions"
-                        style={{ backgroundColor: "#de2fff" }}
-                      >
-                        <Tooltip title="Edit">
-                          <IconButton
-                            onClick={() => handleEditProduct(item.id)}
-                          >
-                            <FaRegEdit />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
                       <div
                         className="btnActions"
                         style={{ backgroundColor: "#ff6179" }}
                       >
                         <Tooltip title="Delete">
                           <IconButton
-                            onClick={() => handleDeleteProduct(item.id)}
+                            onClick={() => handleDeleteCategory(item.id)}
                           >
                             <RiDeleteBin6Line />
                           </IconButton>
@@ -255,8 +173,8 @@ const ProductsList = (props) => {
           <div>
             Page <strong>{page}</strong> Show{" "}
             <strong>
-              {Array.isArray(dataProducts) && dataProducts.length > 0
-                ? dataProducts.length
+              {Array.isArray(dataCat) && dataCat.length > 0
+                ? dataCat.length
                 : "No data found"}
             </strong>
           </div>
@@ -274,9 +192,9 @@ const ProductsList = (props) => {
   );
 };
 
-ProductsList.propTypes = {
+SubCategoryList.propTypes = {
   title: PropTypes.node.isRequired,
   isSharedPage: PropTypes.bool,
 };
 
-export default ProductsList;
+export default SubCategoryList;

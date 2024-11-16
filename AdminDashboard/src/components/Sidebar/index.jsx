@@ -3,18 +3,25 @@ import Logo from "../../assets/images/SpaceX-Logo.png";
 import Button from "@mui/material/Button";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { RiProductHuntLine } from "react-icons/ri";
-import { FaAngleRight } from "react-icons/fa6";
-import { BsCartCheck } from "react-icons/bs";
-import { IoMdNotificationsOutline } from "react-icons/io";
-import { IoSettingsOutline } from "react-icons/io5";
-import { FiUsers } from "react-icons/fi";
+import { MdOutlineCategory } from "react-icons/md";
+// import { FaAngleRight } from "react-icons/fa6";
+// import { BsCartCheck } from "react-icons/bs";
+// import { IoMdNotificationsOutline } from "react-icons/io";
+// import { IoSettingsOutline } from "react-icons/io5";
+// import { FiUsers } from "react-icons/fi";
 import { FiUser } from "react-icons/fi";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import NavTab from "./NavTab";
+import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import Collapse from "@mui/material/Collapse";
+import CloseIcon from "@mui/icons-material/Close";
+import { MyContext } from "../../App";
 
 const Sidebar = () => {
   const [activeTab, setActiveTab] = useState(null);
   const [isToggleSubmenu, setToggleSubmenu] = useState(false);
+  const context = useContext(MyContext);
 
   const handleTabClick = (index) => {
     if (activeTab === index) {
@@ -28,17 +35,38 @@ const Sidebar = () => {
   const productsSubmenu = [
     { label: "List products", link: "/products/list" },
     { label: "Add product", link: "/products/create" },
-    { label: "Edit product", link: "/products/edit" },
   ];
   const categoriesSubmenu = [
     { label: "List category", link: "/category/list" },
     { label: "Add category", link: "/category/create" },
-    { label: "Edit category", link: "/category/edit" },
+    { label: "List sub category", link: "/subcategory/list" },
+    { label: "Add a sub category", link: "/subcategory/create" },
   ];
 
   return (
     <>
       <div className="sidebar fixed top-0 left-0 z-[100] w-[15%]">
+        <Collapse in={context.open} className="position-fixed bottom-0">
+          <Alert
+            variant="filled"
+            severity={context.TypeMessage === "success" ? "success" : "error"}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  context.setOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            {context.Message}
+          </Alert>
+        </Collapse>
         <Link to={""}>
           <div className="logoWrapper flex items-center">
             <img className="px-4 mt-2" src={Logo} alt="logo" />
@@ -66,6 +94,7 @@ const Sidebar = () => {
               setActiveTab={handleTabClick}
               submenus={productsSubmenu}
               title="Products"
+              iconNav={<RiProductHuntLine className="mr-1" />}
             />
 
             <NavTab
@@ -75,6 +104,7 @@ const Sidebar = () => {
               setActiveTab={handleTabClick}
               submenus={categoriesSubmenu}
               title="Categories"
+              iconNav={<MdOutlineCategory className="mr-1" />}
             />
 
             {/* <li>
@@ -149,7 +179,7 @@ const Sidebar = () => {
               </h6>
             </li> */}
             <li>
-              <Link to='/authen/login'>
+              <Link to="/authen/login">
                 <Button
                   className={`w-100 py-2 ${activeTab === 6 ? "active" : ""}`}
                   onClick={() => setActiveTab(6)}

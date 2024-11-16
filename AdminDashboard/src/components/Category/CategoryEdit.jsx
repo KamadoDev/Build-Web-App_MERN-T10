@@ -1,82 +1,77 @@
-import { emphasize, styled } from "@mui/material/styles";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import Chip from "@mui/material/Chip";
-import HomeIcon from "@mui/icons-material/Home";
-import { Link, useNavigate } from "react-router-dom";
 import TextField from "@mui/material/TextField";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import FormHelperText from "@mui/material/FormHelperText";
 import { IoIosClose } from "react-icons/io";
 import { Button } from "@mui/material";
 import { IoIosSave } from "react-icons/io";
-import { postData } from "../../utils/api";
+import { getData, putData } from "../../utils/api";
+import PropTypes from "prop-types";
+import { MyContext } from "../../App";
 import LinearProgress from "@mui/material/LinearProgress";
 import { FcAddImage } from "react-icons/fc";
-import { MyContext } from "../../App";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 
-const StyledBreadcrumb = styled(Chip)(({ theme }) => {
-  const backgroundColor =
-    theme.palette.mode === "light"
-      ? theme.palette.grey[100]
-      : theme.palette.grey[800];
-  return {
-    backgroundColor,
-    height: theme.spacing(3),
-    color: theme.palette.text.primary,
-    fontWeight: theme.typography.fontWeightRegular,
-    "&:hover, &:focus": {
-      backgroundColor: emphasize(backgroundColor, 0.06),
-    },
-    "&:active": {
-      boxShadow: theme.shadows[1],
-      backgroundColor: emphasize(backgroundColor, 0.12),
-    },
-  };
-}); // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
-
-const CategoryCreate = () => {
-  const navigate = useNavigate();
+const CategoryEdit = (props) => {
+  const CatID = props.CatID;
   const context = useContext(MyContext);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [formFields, setFormFields] = useState({
     name: "",
-    images: [],
+    image: [], // Chỉ lưu trữ một ảnh trong mảng
     color: "",
     type: "",
+    public_id: [],
   });
 
+  // Hàm thay đổi input cho các trường text
   const onChangeInput = (e) => {
     e.preventDefault();
     const { name, value } = e.target;
 
+    // Nếu trường là images, bạn không cần cập nhật images ở đây
     if (name !== "images") {
       setFormFields({ ...formFields, [name]: value });
     }
   };
 
+  // Hàm tải lên ảnh và cập nhật formFields
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Thiết lập ảnh xem trước
       setImagePreview(URL.createObjectURL(file));
 
+      // Cập nhật formFields để bao gồm ảnh mới vào mảng images
       setFormFields((prev) => ({
         ...prev,
-        images: [file],
+        image: [file], // Ghi đè mảng images bằng một mảng chứa file đã chọn
       }));
     }
   };
 
-  const handleRemoveImage = () => {
-    setFormFields((prevFields) => ({
-      ...prevFields,
-      images: [],
-    }));
-    setImagePreview(null);
+  const fetchData = () => {
+    getData(`/api/category/${CatID}`).then((res) => {
+      setFormFields({
+        name: res.data.name,
+        color: res.data.color,
+        type: res.data.type,
+        image: res.data.images.map((img) => img.url), // Giữ hình ảnh hiện tại
+        public_id: res.data.images.map((id) => id.public_id), // Giữ hình ảnh hiện tại
+      });
+      setImagePreview(res.data.images[0]?.url || null); // Hiển thị hình ảnh đầu tiên
+      console.log(res.data);
+    });
   };
+
+  useEffect(() => {
+    // Cuộn lên đầu trang
+    window.scrollTo(0, 0);
+    fetchData();
+  }, [CatID]);
 
   const handleSelectChange = (field, value) => {
     setFormFields((prevFields) => ({
@@ -85,31 +80,33 @@ const CategoryCreate = () => {
     }));
   };
 
-  // Hàm thêm danh mục
-  const addCategory = async (e) => {
+  const editCategory = async (e) => {
     e.preventDefault();
     setLoading(true);
     window.scrollTo(0, 0);
+    if (formFields.image.length === 0) {
+      context.setOpen(true);
+      setLoading(false);
+      return; // Dừng hàm nếu không có ảnh
+    }
 
     const formData = new FormData();
     formData.append("name", formFields.name);
     formData.append("color", formFields.color);
     formData.append("type", formFields.type);
-    if (formFields.images[0]) {
-      formData.append("file", formFields.images[0]);
+
+    // Thêm tệp hình ảnh nếu có
+    if (formFields.image.length > 0) {
+      // Kiểm tra nếu có hình ảnh mới
+      formData.append("file", formFields.image[0]);
     }
-
     try {
-      // Gọi API để thêm danh mục
-      const response = await postData("/api/category/create", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
+      const response = await putData(`/api/category/${CatID}`, formData);
+      console.log(response);
       if (response.success === true) {
         context.setMessage(response.message);
         context.setTypeMessage(response.type || "success");
         context.setOpen(true);
-        navigate("/category/list");
       } else {
         context.setMessage(response.message || response.error.message);
         context.setTypeMessage(response.type || "error");
@@ -119,37 +116,37 @@ const CategoryCreate = () => {
       console.error("Error:", error);
       context.setOpen(true);
     } finally {
+      context.setOpenDraw(false);
       setLoading(false);
     }
   };
 
+  // Hàm xóa ảnh
+  const handleRemoveImage = async () => {
+    setLoading(true);
+    setFormFields((prev) => ({
+      ...prev,
+      image: [], // Xóa ảnh hiện tại
+      public_id: [], // Xóa public_id của ảnh hiện tại
+    }));
+    setImagePreview(null);
+    setLoading(false);
+  };
+
   return (
     <>
-      {/* Thanh tiến trình */}
-      {loading && <LinearProgress />}
-      <div className="card shadow my-4 border-0 flex-center p-3">
-        <div className="flex items-center justify-between">
-          <h1 className="font-weight-bold mb-0">Create category</h1>
-          <div className="ml-auto flex items-center gap-3">
-            <div role="presentation">
-              <Breadcrumbs aria-label="breadcrumb">
-                <StyledBreadcrumb
-                  label="Dashboard"
-                  icon={<HomeIcon fontSize="small" />}
-                />
-                <StyledBreadcrumb label="category" />
-                <StyledBreadcrumb label="create" />
-              </Breadcrumbs>
-            </div>
+      <form onSubmit={editCategory}>
+        <div className="card shadow border-0 flex-center p-3">
+          <div className="flex items-center justify-between py-3">
+            <h1 className="font-weight-bold mb-0 ">
+              Edit category ID:{" "}
+              <strong className="text-indigo-400">{CatID}</strong>
+            </h1>
           </div>
-        </div>
-      </div>
-
-      <form onSubmit={addCategory}>
-        <div className="card shadow my-4 border-0 flex-center p-3">
-          <h2 className="text-black/55 mb-4 capitalize text-lg">
+          {loading && <LinearProgress />}
+          <h5 className="text-black/55 capitalize text-xl ">
             Basic Information
-          </h2>
+          </h5>
           <div className="row">
             <div className="col">
               <div className="form-group">
@@ -162,12 +159,13 @@ const CategoryCreate = () => {
                   variant="outlined"
                   fullWidth
                   placeholder="Please enter a Category name"
+                  required
                   onChange={onChangeInput}
                   value={formFields.name}
                 />
+                <FormHelperText>Required</FormHelperText>
               </div>
             </div>
-
             <div className="col">
               <div className="form-group">
                 <label htmlFor="color">Color</label>
@@ -179,9 +177,11 @@ const CategoryCreate = () => {
                   variant="outlined"
                   fullWidth
                   placeholder="Please enter Color"
+                  required
                   onChange={onChangeInput}
                   value={formFields.color}
                 />
+                <FormHelperText>Error</FormHelperText>
               </div>
             </div>
             <div className="col">
@@ -199,7 +199,9 @@ const CategoryCreate = () => {
                     value={formFields.type}
                     onChange={(e) => handleSelectChange("type", e.target.value)}
                   >
-                    <MenuItem value="nav" defaultValue="nav">Category</MenuItem>
+                    <MenuItem value="nav" defaultValue="nav">
+                      Category
+                    </MenuItem>
                     <MenuItem value="menu">On Menu</MenuItem>
                   </Select>
                 </FormControl>
@@ -248,19 +250,20 @@ const CategoryCreate = () => {
                 color="primary"
               >
                 <IoIosSave className="mr-1" style={{ fontSize: "25px" }} />
-                <span className="text-sm capitalize">{loading === true ? "Creating..." : "Create Category"}</span>
+                <span className="text-sm capitalize">
+                  {loading === true ? "Editing..." : "Edit category"}
+                </span>
               </Button>
-              <Link to="/category/list">
-                <Button
-                  type="button"
-                  className="flex items-center mr-2 py-2"
-                  variant="contained"
-                  color="error"
-                >
-                  <IoIosClose style={{ fontSize: "25px" }} />
-                  <span className="text-sm capitalize">Cancel</span>
-                </Button>
-              </Link>
+              <Button
+                onClick={() => context.setOpenDraw(false)}
+                type="button"
+                className="flex items-center mr-2 py-2"
+                variant="contained"
+                color="error"
+              >
+                <IoIosClose style={{ fontSize: "25px" }} />
+                <span className="text-sm capitalize">Cancel</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -269,4 +272,9 @@ const CategoryCreate = () => {
   );
 };
 
-export default CategoryCreate;
+// Khai báo kiểu dữ liệu cho các props
+CategoryEdit.propTypes = {
+  CatID: PropTypes.string.isRequired,
+};
+
+export default CategoryEdit;

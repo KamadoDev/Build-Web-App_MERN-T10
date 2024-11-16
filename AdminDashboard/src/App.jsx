@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
@@ -13,18 +13,43 @@ import AuthLayout from "./Layouts/Auth/AuthLayout";
 import CategoriesLayout from "./Layouts/Categories/CategoriesLayout";
 import CategoryList from "./components/Category/CategoryList";
 import CategoryCreate from "./components/Category/CategoryCreate";
-
+import SubCategoryCreate from "./components/SubCategory/SubCategoryCreate";
+import SubCategoryList from "./components/SubCategory/SubCategoryList";
 const MyContext = createContext();
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(false);
   const [isShowHeaderFooter, setIsShowHeaderFooter] = useState(false);
+  const [openDraw, setOpenDraw] = useState(false);
+  const [Message, setMessage] = useState("");
+  const [TypeMessage, setTypeMessage] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setTimeout(() => {
+      setOpen(false);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    if (open === true) {
+      handleOpenModal();
+    }
+  }, [open]);
 
   const values = {
     isLogin,
     setIsLogin,
     isShowHeaderFooter,
     setIsShowHeaderFooter,
+    openDraw,
+    setOpenDraw,
+    setMessage,
+    Message,
+    setTypeMessage,
+    TypeMessage,
+    setOpen,
+    open,
   };
 
   return (
@@ -56,16 +81,23 @@ const App = () => {
               <Route path="/products" element={<ProductsLayout />}>
                 <Route
                   path="list"
-                  element={<ProductsList title="Products list" />}
+                  element={<ProductsList title="List" />}
                 />
                 <Route path="create" element={<ProductCreate />} />
               </Route>
               <Route path="/category" element={<CategoriesLayout />}>
                 <Route
                   path="list"
-                  element={<CategoryList title="Category list" />}
+                  element={<CategoryList title="List" />}
                 />
                 <Route path="create" element={<CategoryCreate />} />
+              </Route>
+              <Route path="/subcategory" element={<CategoriesLayout />}>
+                <Route
+                  path="list"
+                  element={<SubCategoryList title="List" />}
+                />
+                <Route path="create" element={<SubCategoryCreate />} />
               </Route>
               <Route path="/authen" element={<AuthLayout />}>
                 <Route path="login" element={<SignIn />} />

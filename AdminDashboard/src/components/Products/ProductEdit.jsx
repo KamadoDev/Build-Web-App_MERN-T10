@@ -1,72 +1,49 @@
 import Chip from "@mui/material/Chip";
+import PropTypes from "prop-types";
 import TextField from "@mui/material/TextField";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { IoIosClose, IoIosSave } from "react-icons/io";
 import { FcAddImage } from "react-icons/fc";
 import { MyContext } from "../../App";
+
 import LinearProgress from "@mui/material/LinearProgress";
 import { Button } from "@mui/material";
-import { getData, postData } from "../../utils/api";
-import { Link, useNavigate } from "react-router-dom";
+import { getData, postData, putData } from "../../utils/api";
 import Rating from "@mui/material/Rating";
 import Stack from "@mui/material/Stack";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import { emphasize, styled } from "@mui/material/styles";
-import HomeIcon from "@mui/icons-material/Home";
 
-const StyledBreadcrumb = styled(Chip)(({ theme }) => {
-  const backgroundColor =
-    theme.palette.mode === "light"
-      ? theme.palette.grey[100]
-      : theme.palette.grey[800];
-  return {
-    backgroundColor,
-    height: theme.spacing(3),
-    color: theme.palette.text.primary,
-    fontWeight: theme.typography.fontWeightRegular,
-    "&:hover, &:focus": {
-      backgroundColor: emphasize(backgroundColor, 0.06),
-    },
-    "&:active": {
-      boxShadow: theme.shadows[1],
-      backgroundColor: emphasize(backgroundColor, 0.12),
-    },
-  };
-}); // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
-
-const ProductCreate = () => {
+const ProductEdit = (props) => {
+  const productID = props.productID;
   const context = useContext(MyContext);
-  const navigate = useNavigate();
   const [dataCat, setDataCat] = useState([]);
   const [dataSubCat, setDataSubCat] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [tagInput, setTagInput] = useState("");
   const [sizeInput, setSizeInput] = useState("");
   const [colorInput, setColorInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
+
   const [ratingInput, setRatingInput] = useState(Number | null);
-  const [files, setFiles] = useState([]);
-  const [previews, setPreviews] = useState([]);
+
   const [formFields, setFormFields] = useState({
     name: "",
     description: "",
-    price: "",
+    price: 0,
+    old_price: 0,
+    discount: 0,
     brand: "",
-    productInStock: "",
     category: "",
     sub_category: "",
-    old_price: "",
-    discount: "",
-    isFeatured: "",
-    numberReviews: 0,
-    rating: 0,
+    images: [],
+    productInStock: 0,
+    isFeatured: false,
+    tags: [],
     size: [],
     colors: [],
-    tags: [],
-    images: [],
+    rating: 0,
   });
 
   useEffect(() => {
@@ -91,6 +68,62 @@ const ProductCreate = () => {
       ...prevFields,
       [field]: value,
     }));
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newImages = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      file, // Lưu trữ file thực tế
+    }));
+
+    if (newImages.length > 0) {
+      setFormFields((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newImages], // Thêm các ảnh mới vào mảng images
+      }));
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    const image = formFields.images[index];
+    const productID_ = productID;
+    console.log("object: " + productID_);
+    console.log("object: " + image.public_id);
+    if (image.public_id) {
+      const idImage = image.public_id;
+      removeImageFromCloudinary(idImage, productID_);
+    } else {
+      setFormFields((prev) => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index), // Remove by index
+      }));
+    }
+  };
+
+  const removeImageFromCloudinary = async (public_id, productID_) => {
+    setLoading(true);
+    try {
+      const response = await postData(`/api/products/upload/remove`, {
+        public_id,
+        productID_,
+      });
+      console.log(`Image with public_id ${public_id} removed.`);
+      if (response.success === true) {
+        context.setMessage(response.message);
+        context.setTypeMessage(response.type || "success");
+        context.setOpen(true);
+        fetchData();
+      } else {
+        context.setMessage(response.message);
+        context.setTypeMessage(response.type || "error");
+        context.setOpen(true);
+      }
+    } catch (error) {
+      console.error(`Error removing image: ${error}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleItemAdd = (event, field, input, setInput) => {
@@ -127,39 +160,52 @@ const ProductCreate = () => {
   const handleColorDelete = (colorToDelete) =>
     handleItemDelete("colors", colorToDelete);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const resCat = await getData("/api/category");
-        const resSubCat = await getData("/api/subcategory");
-        setDataCat(resCat?.categories || []);
-        setDataSubCat(resSubCat?.subcategories || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const objectUrls = files.map((file) => URL.createObjectURL(file));
-    setPreviews(objectUrls);
-    return () => objectUrls.forEach(URL.revokeObjectURL);
-  }, [files]);
-
-  const onChangeFile = (e) => {
-    const filesArr = Array.from(e.target.files);
-    setFiles(filesArr);
-  };
-  const handleRemoveImage = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const createProduct = async (e) => {
-    e.preventDefault();
-    console.log(formFields);
-    setLoading(true);
+  const fetchData = useCallback(async () => {
     window.scrollTo(0, 0);
+    try {
+      const [resProduct, resCat, resSubCat] = await Promise.all([
+        getData(`/api/products/${productID}`),
+        getData(`/api/category`),
+        getData(`/api/subcategory`),
+      ]);
+
+      // Xử lý dữ liệu sản phẩm
+      if (resProduct) {
+        const productData = resProduct.product;
+        const imagesWithPublicId = productData.images.map((image) => ({
+          ...image,
+          public_id: image.public_id || null,
+        }));
+
+        // Cập nhật formFields và ratingInput
+        setFormFields((prevFields) => ({
+          ...prevFields,
+          ...productData,
+          images: imagesWithPublicId,
+        }));
+
+        console.log("ratin", productData.rating)
+        // Set giá trị ratingInput để hiển thị đúng rating hiện có
+        setRatingInput(productData.rating || 0); // Giá trị mặc định là 0 nếu không có
+      }
+
+      // Xử lý danh mục và danh mục con
+      if (resCat) setDataCat(resCat.categories);
+      if (resSubCat) setDataSubCat(resSubCat.subcategories);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, [productID]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const editProduct = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    console.log(formFields);
+
     const {
       name,
       description,
@@ -171,56 +217,72 @@ const ProductCreate = () => {
       old_price,
       discount,
       isFeatured,
-      numberReviews = 0,
+      numberReviews,
       size,
       colors,
       tags,
       rating,
     } = formFields;
 
-    if (files.length === 0) {
-      // Kiểm tra nếu không có ảnh nào được chọn
+    // Check for required fields and valid values
+    if (price < 0 || productInStock < 0) {
+      return alert("Price and productInStock must be positive numbers!");
+    }
+
+    // kiểm tra ảnh
+    if (formFields.images.length === 0) {
       context.setMessage("Vui lòng chọn hình ảnh!");
       context.setTypeMessage("error");
       context.setOpen(true);
       setLoading(false);
-      return; // Dừng hàm nếu chưa có ảnh
+      return;
     }
 
-    // Chuẩn bị form data để gửi sản phẩm lên server
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
     formData.append("price", price);
+    formData.append("old_price", old_price);
+    formData.append("discount", discount);
     formData.append("brand", brand);
     formData.append("productInStock", productInStock);
     formData.append("category", category);
     formData.append("sub_category", sub_category);
-    formData.append("old_price", old_price);
-    formData.append("discount", discount);
     formData.append("isFeatured", isFeatured);
     formData.append("numberReviews", numberReviews);
     formData.append("rating", rating);
+
+    // Add tags to formData
+    tags.forEach((tag) => formData.append("tags", tag));
     size.forEach((size) => formData.append("size", size)); // Thêm từng tag vào formData
     colors.forEach((color) => formData.append("colors", color)); // Thêm từng tag vào formData
-    tags.forEach((tag) => formData.append("tags", tag)); // Thêm từng tag vào formData
-    files.forEach((file) => formData.append("images", file)); // Thêm từng ảnh vào formData
+
+    // Add images - both local files and existing images (public_id)
+    formFields.images.forEach((image) => {
+      if (image.file) {
+        // If the image is a newly uploaded file, add it to formData
+        formData.append("files", image.file);
+      } else if (image.public_id) {
+        // If the image is an existing image, just add its public_id to the list
+        formData.append("image_public_ids[]", image.public_id);
+      }
+    });
 
     try {
-      const response = await postData("/api/products/create", formData, true);
+      const response = await putData(`/api/products/${productID}`, formData);
       console.log(response);
-      if (response.success === true) {
+      if (response.success) {
         context.setMessage(response.message);
         context.setTypeMessage(response.type || "success");
         context.setOpen(true);
-        navigate("/products/list");
+        context.setOpenDraw(false);
       } else {
         context.setMessage(response.message || response.error.message);
         context.setTypeMessage(response.type || "error");
         context.setOpen(true);
       }
     } catch (error) {
-      console.log(error);
+      console.log("Error updating product:", error);
     } finally {
       setLoading(false);
     }
@@ -228,25 +290,15 @@ const ProductCreate = () => {
 
   return (
     <>
-      <form onSubmit={createProduct}>
-        {loading && <LinearProgress />}
+      <form onSubmit={editProduct}>
         <div className="card shadow my-4 border-0 flex-center p-3">
           <div className="flex items-center justify-between">
-            <h1 className="font-weight-bold mb-0">Create product</h1>
-            <div className="ml-auto flex items-center gap-3">
-              <div role="presentation">
-                <Breadcrumbs aria-label="breadcrumb">
-                  <StyledBreadcrumb
-                    label="Dashboard"
-                    icon={<HomeIcon fontSize="small" />}
-                  />
-                  <StyledBreadcrumb label="product" />
-                  <StyledBreadcrumb label="create" />
-                </Breadcrumbs>
-              </div>
-            </div>
+            <h1 className="font-weight-bold mb-0">
+              _ID: <strong className="text-indigo-400">{productID}</strong>
+            </h1>
           </div>
         </div>
+        {loading && <LinearProgress />}
         <div className="card shadow my-4 border-0 flex-center p-3">
           <h2 className="text-black/55 mb-4 capitalize text-lg">
             Basic Information
@@ -261,6 +313,7 @@ const ProductCreate = () => {
                   name="name"
                   label="Product Name"
                   type="text"
+                  value={formFields.name}
                   variant="outlined"
                   fullWidth
                   placeholder="Please enter a product name"
@@ -277,6 +330,7 @@ const ProductCreate = () => {
                   id="description"
                   name="description"
                   label="Description"
+                  value={formFields.description}
                   type="text"
                   variant="outlined"
                   fullWidth
@@ -299,6 +353,7 @@ const ProductCreate = () => {
                   fullWidth
                   placeholder="Please enter price"
                   onChange={onChangeInput}
+                  value={formFields.price}
                 />
               </div>
             </div>
@@ -312,9 +367,9 @@ const ProductCreate = () => {
                   <Select
                     labelId="demo-simple-select-required-label"
                     id="demo-simple-select-required"
+                    value={formFields.category}
                     label="Category"
                     name="category"
-                    value={formFields.category}
                     onChange={(e) =>
                       handleSelectChange("category", e.target.value)
                     }
@@ -345,9 +400,9 @@ const ProductCreate = () => {
                   <Select
                     labelId="demo-simple-select-required-label"
                     id="demo-simple-select-required"
+                    value={formFields.sub_category}
                     label="Sub Category"
                     name="sub_category"
-                    value={formFields.sub_category}
                     onChange={(e) =>
                       handleSelectChange("sub_category", e.target.value)
                     }
@@ -382,6 +437,7 @@ const ProductCreate = () => {
                   fullWidth
                   placeholder="Please enter old price"
                   onChange={onChangeInput}
+                  value={formFields.old_price}
                 />
               </div>
             </div>
@@ -395,9 +451,8 @@ const ProductCreate = () => {
                   <Select
                     labelId="demo-simple-select-required-label"
                     id="demo-simple-select-required"
-                    label="Is Featured"
-                    name="isFeatured"
                     value={formFields.isFeatured}
+                    label="Is Featured"
                     onChange={(e) =>
                       handleSelectChange("isFeatured", e.target.value)
                     }
@@ -415,11 +470,12 @@ const ProductCreate = () => {
                   id="productInStock"
                   name="productInStock"
                   label="Product Stock"
-                  type="text"
+                  type="number"
                   variant="outlined"
                   fullWidth
                   placeholder="Please enter product instock"
                   onChange={onChangeInput}
+                  value={formFields.productInStock}
                 />
               </div>
             </div>
@@ -437,6 +493,7 @@ const ProductCreate = () => {
                   fullWidth
                   placeholder="Please enter brand"
                   onChange={onChangeInput}
+                  value={formFields.brand}
                 />
               </div>
             </div>
@@ -446,15 +503,32 @@ const ProductCreate = () => {
                 <TextField
                   id="discount"
                   name="discount"
-                  label="Discount"
                   type="text"
                   variant="outlined"
                   fullWidth
                   placeholder="Please enter discount"
                   onChange={onChangeInput}
+                  value={formFields.discount}
                 />
               </div>
             </div>
+            <div className="col">
+              <div className="form-group">
+                <label htmlFor="rating">Rating</label>
+                <Stack spacing={1}>
+                  <Rating
+                    name="simple-controlled"
+                    value={ratingInput}
+                    onChange={(event, newValue) => {
+                      setRatingInput(newValue);
+                    }}
+                    // precision={0.5}
+                  />
+                </Stack>
+              </div>
+            </div>
+          </div>
+          <div className="row">
             {/* TAGS */}
             <div className="col">
               <div className="form-group">
@@ -567,25 +641,7 @@ const ProductCreate = () => {
                 </div>
               </div>
             </div>
-
             {/* END COLOR */}
-          </div>
-          <div className="row">
-            <div className="col">
-              <div className="form-group">
-                <label htmlFor="rating">Rating</label>
-                <Stack spacing={1}>
-                  <Rating
-                    name="simple-controlled"
-                    value={ratingInput}
-                    onChange={(event, newValue) => {
-                      setRatingInput(newValue);
-                    }}
-                    // precision={0.5}
-                  />
-                </Stack>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -594,27 +650,26 @@ const ProductCreate = () => {
             Upload Images
           </h2>
           <div className="flex items-center gap-4 flex-wrap">
-            {previews?.length !== 0 &&
-              previews?.map((image, index) => (
-                <div className="imgUploadBoxWrapper" key={index}>
-                  <span
-                    className="remove flex items-center justify-center"
-                    onClick={() => handleRemoveImage(index)} // Gọi hàm với index
-                  >
-                    <IoIosClose />
-                  </span>
-                  <div className="imgUploadBox cursor-pointer overflow-hidden rounded-md duration-300">
-                    <img src={image} alt="Uploaded" />
-                  </div>
+            {formFields.images.map((image, index) => (
+              <div className="imgUploadBoxWrapper" key={index}>
+                <span
+                  className="remove flex items-center justify-center"
+                  onClick={() => handleRemoveImage(index)} // Gọi hàm với index
+                >
+                  <IoIosClose />
+                </span>
+                <div className="imgUploadBox cursor-pointer overflow-hidden rounded-md duration-300">
+                  <img src={image.url} alt="Uploaded" />
                 </div>
-              ))}
+              </div>
+            ))}
             <div className="imgUploadBoxWrapper">
               <div className="imgUploadBox cursor-pointer overflow-hidden rounded-md duration-300 flex items-center justify-center flex-col">
                 <input
                   type="file"
                   multiple
-                  name="images"
-                  onChange={(e) => onChangeFile(e)}
+                  name="image"
+                  onChange={handleImageUpload}
                 />
                 <FcAddImage className="icon" />
                 <h4>Image Upload</h4>
@@ -630,19 +685,20 @@ const ProductCreate = () => {
                 color="primary"
               >
                 <IoIosSave className="mr-1" style={{ fontSize: "25px" }} />
-                <span className="text-sm capitalize">Create Product</span>
+                <span className="text-sm capitalize">
+                  {loading === true ? "Editing..." : "Edit product"}
+                </span>
               </Button>
-              <Link to="/products/list">
-                <Button
-                  type="button"
-                  className="flex items-center mr-2 py-2"
-                  variant="contained"
-                  color="error"
-                >
-                  <IoIosClose style={{ fontSize: "25px" }} />
-                  <span className="text-sm capitalize">Cancel</span>
-                </Button>
-              </Link>
+              <Button
+                onClick={() => context.setOpenDraw(false)}
+                type="button"
+                className="flex items-center mr-2 py-2"
+                variant="contained"
+                color="error"
+              >
+                <IoIosClose style={{ fontSize: "25px" }} />
+                <span className="text-sm capitalize">Cancel</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -651,4 +707,9 @@ const ProductCreate = () => {
   );
 };
 
-export default ProductCreate;
+// Khai báo kiểu dữ liệu cho các props
+ProductEdit.propTypes = {
+  productID: PropTypes.string.isRequired,
+};
+
+export default ProductEdit;

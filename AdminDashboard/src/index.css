@@ -17,6 +17,47 @@ body {
   background-color: #3872fae0;
 }
 
+.info a h6 {
+  font-weight: 500;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all .3s ease-in-out;
+  color: #000;
+  width: 150px;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.info a:hover {
+  text-decoration: unset;
+}
+
+.info a:hover h6 {
+  color: #2bbef9;
+}
+
+.tableList .css-imrjgg-MuiButtonBase-root-MuiCheckbox-root {
+  padding: 0px !important;
+}
+
+.tableList .btnActions .css-aixiz9-MuiButtonBase-root-MuiIconButton-root {
+  padding: 0px !important;
+  width: 100%;
+  height: 100%;
+}
+
+.tableList .btnActions {
+  height: 30px;
+  width: 30px;
+  border-radius: 5px;
+}
+
+.tableList .btnActions button svg {
+  font-size: 19px;
+  color: #fff;
+}
+
 .productCell {
   display: flex;
   align-items: center; /* Căn giữa tất cả nội dung của ô theo chiều dọc */
@@ -24,8 +65,8 @@ body {
 }
 
 .imgWrapper {
-  width: 50px; /* Đặt kích thước ảnh cố định */
-  height: 50px;
+  width: 60px; /* Đặt kích thước ảnh cố định */
+  height: 60px;
   border-radius: 8px; /* Bo góc ảnh */
   overflow: hidden;
   display: flex;
@@ -562,7 +603,7 @@ header .part2 button svg {
 
 .btnAuthSend.btnOTP {
   background-color: transparent !important;
-  border: 1px solid rgba(0, 0, 0, 0.4) !important; 
+  border: 1px solid rgba(0, 0, 0, 0.4) !important;
 }
 
 .btnAuthSend.btnOTP span {
@@ -574,7 +615,6 @@ header .part2 button svg {
   font-weight: 500 !important;
   font-size: 19px;
 }
-
 
 .otpBox input {
   width: 50px;
@@ -589,7 +629,5 @@ header .part2 button svg {
 .otpBox input:focus {
   border: 2px solid #3872fa;
 }
-
-
 
 /* Auth end */
