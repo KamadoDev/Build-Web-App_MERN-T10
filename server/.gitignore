@@ -1,0 +1,17 @@
+# Loại bỏ thư mục node_modules
+node_modules/
+
+# Loại bỏ tệp build
+build/
+dist/
+
+# Loại bỏ tệp log
+*.log
+
+# Loại bỏ tệp tạm thời
+*.tmp
+*.lock
+
+# Loại bỏ các thư mục đồng bộ hóa
+.vscode/
+.idea/

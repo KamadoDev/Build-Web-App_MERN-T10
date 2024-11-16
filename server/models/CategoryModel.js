@@ -21,6 +21,10 @@ const CategorySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    required: true,
+  },
 });
 
 // Tạo virtual cho thuộc tính id

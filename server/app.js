@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+app.use(express.json()); // Để đọc dữ liệu JSON
 app.use(cors());
 app.options("*", cors);
 
@@ -14,6 +15,10 @@ app.use(bodyParser.json());
 // Routes Categories
 const categoryRoutes = require("./routes/categoriesRoutes");
 app.use(`/api/category`, categoryRoutes);
+
+const subCategoryRoutes = require("./routes/subCategoriesRoutes");
+app.use(`/api/subcategory`, subCategoryRoutes); // Routes Subcategories
+
 // Routes Products
 const productsRoutes = require("./routes/productsRoutes");
 app.use(`/api/products`, productsRoutes);
